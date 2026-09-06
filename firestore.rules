@@ -14,8 +14,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Owner and Head Developer share identical permissions — this list is
+    // just who counts as admin, not a permission tier. Keep it IDENTICAL
+    // to the ADMIN_ROLES keys in admin.html.
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email.lower() == "noorproductions.as@gmail.com";
+      return isSignedIn() && request.auth.token.email.lower() in [
+        "noorproductions.as@gmail.com",
+        "developer@example.com"
+      ];
     }
 
     // Doc IDs in verifiedClients/ and reviews/ are the client's
@@ -96,6 +102,25 @@ service cloud.firestore {
         );
 
       allow delete: if isAdmin();
+    }
+
+    // The pre-edit snapshot of a review. Admin-only read so the "before"
+    // version of an edited review is never exposed on the public site —
+    // only the current reviews/{emailId} doc (with allow read: if true)
+    // is public.
+    match /reviews/{emailId}/history/{historyId} {
+      allow read: if isAdmin();
+      // Written once, in the same batch as the client's one allowed edit.
+      // Must exactly match what was on the review doc BEFORE this edit,
+      // so a client can't fabricate their own history.
+      allow create: if isOwnEmail(emailId)
+        && historyId == "pre-edit"
+        && get(/databases/$(database)/documents/reviews/$(emailId)).data.editCount == 0
+        && request.resource.data.keys().hasOnly(["quote", "rating"])
+        && request.resource.data.quote == get(/databases/$(database)/documents/reviews/$(emailId)).data.quote
+        && request.resource.data.rating == get(/databases/$(database)/documents/reviews/$(emailId)).data.rating;
+      // Immutable audit trail — never updated or deleted by anyone.
+      allow update, delete: if false;
     }
   }
 }

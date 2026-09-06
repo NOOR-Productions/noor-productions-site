@@ -63,21 +63,10 @@
   .nav-logo {
     width: 26px;
     height: 26px;
-    border: 1px solid var(--gold);
-    border-radius: 3px;
-    position: relative;
+    border-radius: 50%;
+    object-fit: contain;
     flex-shrink: 0;
-  }
-
-  .nav-logo::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    background: var(--gold);
-    transform: translate(-50%, -50%) rotate(45deg);
+    display: block;
   }
 
   .nav-word {
@@ -242,7 +231,7 @@
 
   <nav class="nav">
     <div class="nav-brand">
-      <div class="nav-logo"></div>
+      <img src="assets/logo.png" alt="NOOR Productions logo" class="nav-logo">
       <span class="nav-word">NOOR Productions</span>
     </div>
     <a href="index.html" class="nav-back">Back to Home</a>

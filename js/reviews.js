@@ -9,6 +9,8 @@
 //   reviews/{emailLowercased}      <- doc ID = client's email
 //     clientEmail, clientName, quote, rating (1-5), createdAt,
 //     editedAt, editCount (0 or 1), adminReply, adminReplyAt
+//   reviews/{emailLowercased}/history/pre-edit   <- admin-only read
+//     quote, rating (the pre-edit values, written once on edit)
 //
 // One review per client, one edit allowed (editCount cap = 1).
 // The moment a client submits their first review, their
@@ -22,7 +24,7 @@ import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, updateDoc, increment, writeBatch,
+  getFirestore, doc, getDoc, increment, writeBatch,
   collection, query, orderBy, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -209,9 +211,11 @@ const quoteInput = document.getElementById("review-quote-input");
 const submitBtn  = document.getElementById("review-modal-submit");
 const statusEl   = document.getElementById("review-modal-status");
 let modalMode = "create";
+let editingPrevious = null; // { quote, rating } captured at openModal time, for edit mode
 
 function openModal(mode, existing) {
   modalMode = mode;
+  editingPrevious = mode === "edit" ? { quote: existing.quote, rating: existing.rating } : null;
   titleEl.textContent = mode === "edit" ? "Edit your review (last edit)" : "Write your review";
   nameInput.value = existing?.clientName || currentUser?.displayName || "";
   quoteInput.value = existing?.quote || "";
@@ -286,13 +290,23 @@ submitBtn?.addEventListener("click", async () => {
         `${name || currentUser.email} (${currentUser.email}) just left a ${selectedRating}-star review:\n\n"${quote}"`
       );
     } else {
-      await updateDoc(doc(db, "reviews", key), {
+      // Two writes, one atomic batch: the public review doc gets the new
+      // quote/rating, and the pre-edit values go into a subcollection
+      // only the admin can read — so the "before" version never ends up
+      // on a document anyone can query publicly.
+      const batch = writeBatch(db);
+      batch.update(doc(db, "reviews", key), {
         quote,
         rating: selectedRating,
         clientName: name || currentUser.displayName || currentUser.email,
         editedAt: serverTimestamp(),
         editCount: increment(1)
       });
+      batch.set(doc(db, "reviews", key, "history", "pre-edit"), {
+        quote: editingPrevious.quote,
+        rating: editingPrevious.rating
+      });
+      await batch.commit();
       emailAdmin(
         "Client edited their review",
         `${name || currentUser.email} (${currentUser.email}) edited their review to a ${selectedRating}-star review:\n\n"${quote}"`
