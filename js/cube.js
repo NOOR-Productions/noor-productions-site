@@ -39,7 +39,7 @@ const gsap = window.gsap;
    dark, numbered, waiting.
 ===================================================== */
 const WORKS = [
-  { slot: 5,  title: 'NOOR Productions — Agency Portal', logo: '', story: 'The mobile-first terminal that runs the studio itself. Live carousel, lightbox viewer, floating WhatsApp panel — you\'re already standing inside it.', link: '', images: [] },
+  { slot: 5,  title: 'NOOR Productions — Agency Portal', logo: '', story: 'The official NOOR PRODUCTIONS website; with all our works and opinions in it.You\'re already standing inside it.', link: '', images: [] },
   { slot: 14, title: 'MedStore Bardhaman', logo: '', story: 'A full pharmacy web app — browse medicines, check ingredients and stock, order straight to WhatsApp, with a live map built into the contact page.', link: 'https://sk-abdus-sattar.github.io/MedStore/', images: [] },
   { slot: 23, title: 'Bapi Store, Bardhaman', logo: '', story: 'A neighbourhood general store rebuilt in dark luxury. Cinematic hero, category filtering, full cart with WhatsApp checkout, live store hours and directions.', link: 'https://sk-abdus-sattar.github.io/General-Store/', images: [] },
   { slot: 32, title: 'Dream Boutique, Bardhaman', logo: '', story: 'A fashion e-commerce catalog backed by Firebase, with a fully automated ordering system — browse, cart, and checkout without a single manual step behind the scenes.', link: 'https://sk-abdus-sattar.github.io/Dream-Boutique/', images: [] },
